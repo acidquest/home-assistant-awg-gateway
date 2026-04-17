@@ -65,7 +65,19 @@ def _active_node_attrs(data: dict[str, Any]) -> dict[str, Any]:
 
 def _routing_mode_attrs(data: dict[str, Any]) -> dict[str, Any]:
     routing_mode = data.get("routing_mode") or {}
-    return {"label": routing_mode.get("label")}
+    return {
+        "raw_target": routing_mode.get("target"),
+        "raw_label": routing_mode.get("label"),
+    }
+
+
+def _routing_mode_value(data: dict[str, Any]) -> str | None:
+    target = _nested(data, "routing_mode", "target")
+    if target == "local":
+        return "Direct"
+    if target == "awg":
+        return "VPN"
+    return target
 
 
 SENSORS: tuple[AwgGatewaySensorDescription, ...] = (
@@ -140,8 +152,8 @@ SENSORS: tuple[AwgGatewaySensorDescription, ...] = (
     AwgGatewaySensorDescription(key="runtime_mode", name="Runtime Mode", value_fn=lambda d: d.get("runtime_mode")),
     AwgGatewaySensorDescription(
         key="routing_mode_target",
-        name="Routing Mode",
-        value_fn=lambda d: _nested(d, "routing_mode", "target"),
+        name="Traffic Route",
+        value_fn=_routing_mode_value,
         attrs_fn=_routing_mode_attrs,
     ),
     AwgGatewaySensorDescription(
