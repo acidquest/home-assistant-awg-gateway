@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AWG Gateway switches."""
-    if not entry.runtime_data.coordinator.control_enabled:
+    if not entry.runtime_data.status_coordinator.control_enabled:
         return
     async_add_entities(AwgGatewaySwitch(entry, description) for description in SWITCHES)
 

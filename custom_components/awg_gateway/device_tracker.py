@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AwgGatewayConfigEntry
+from .coordinator import AwgGatewayDevicesUpdateCoordinator
 from .const import DOMAIN
 
 
@@ -29,7 +30,7 @@ async def async_setup_entry(
     @callback
     def _sync_entities() -> None:
         new_entities: list[AwgGatewayDeviceTracker] = []
-        devices = entry.runtime_data.coordinator.data.devices
+        devices = entry.runtime_data.devices_coordinator.data.devices
         active_keys = {device["identity_key"] for device in devices if device.get("identity_key")}
 
         for device in devices:
@@ -54,17 +55,17 @@ async def async_setup_entry(
         if new_entities:
             async_add_entities(new_entities)
 
-    entry.async_on_unload(entry.runtime_data.coordinator.async_add_listener(_sync_entities))
+    entry.async_on_unload(entry.runtime_data.devices_coordinator.async_add_listener(_sync_entities))
     _sync_entities()
 
 
-class AwgGatewayDeviceTracker(CoordinatorEntity, ScannerEntity):
+class AwgGatewayDeviceTracker(CoordinatorEntity[AwgGatewayDevicesUpdateCoordinator], ScannerEntity):
     """Represent a tracked LAN device reported by the gateway."""
 
     _attr_has_entity_name = False
 
     def __init__(self, entry: AwgGatewayConfigEntry, identity_key: str) -> None:
-        super().__init__(entry.runtime_data.coordinator)
+        super().__init__(entry.runtime_data.devices_coordinator)
         self._entry = entry
         self._identity_key = identity_key
         self._attr_unique_id = identity_key
