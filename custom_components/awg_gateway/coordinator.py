@@ -174,7 +174,6 @@ class AwgGatewayDevicesUpdateCoordinator(_AwgGatewayBaseCoordinator[AwgGatewayDe
         )
 
     async def _async_update_data(self) -> AwgGatewayDevicesData:
-        previous = self.data
         try:
             devices_payload = await self.client.async_get_devices(self.device_scope)
         except (
@@ -183,9 +182,7 @@ class AwgGatewayDevicesUpdateCoordinator(_AwgGatewayBaseCoordinator[AwgGatewayDe
             AwgGatewayInvalidAuthError,
             AwgGatewayUnexpectedResponseError,
         ) as err:
-            previous_data = self._handle_update_error(err, previous)
-            LOGGER.warning("Using cached AWG Gateway devices due to update error: %s", err)
-            return previous_data
+            raise UpdateFailed(str(err)) from err
 
         if not isinstance(devices_payload, dict):
             raise UpdateFailed("Devices payload is invalid")
